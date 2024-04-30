@@ -63,13 +63,13 @@ Visual Studio Code integrates with [Azure Functions Core tools](functions-run-lo
 
 1.  To start the function locally, press F5 or the **Run and Debug** icon in the left-hand side Activity bar. The **Terminal** panel displays the Output from Core Tools. Your app starts in the **Terminal** panel. You can see the URL endpoint of your HTTP-triggered function running locally.
 
-    ![Screenshot of the Local function VS Code output.](../includes/media/functions-run-function-test-local-vs-code/functions-vscode-f5.png)
+    ![Screenshot of the Local function VS Code output.](media/functions-create-first-java-VSCODE/functions-vscode-f5.png)
 
     If you have trouble running on Windows, make sure that the default terminal for Visual Studio Code isn't set to **WSL Bash**.
 
 2.  With Core Tools still running in **Terminal**, choose the Azure icon in the activity bar. In the **Workspace** area, expand **Local Project** > **Functions**. Right-click (Windows) or Ctrl - click (macOS) the new function and choose **Execute Function Now...**.
 
-    ![Execute function now from Visual Studio Code](../includes/media/functions-run-function-test-local-vs-code/execute-function-now.png)
+    ![Execute function now from Visual Studio Code](media/functions-create-first-java-VSCODE/execute-function-now.png)
 
 3.  In **Enter request body** you see the request message body value of `{ "name": "Azure" }`. Press Enter to send this request message to your function.
 
@@ -103,7 +103,7 @@ In this section, you create a function app and related resources in your Azure s
 
 1.  Choose the Azure icon in the Activity bar. Then in the **Resources** area, select the **+** icon and choose the **Create Function App in Azure** option.
 
-    ![Create a resource in your Azure subscription](../includes/media/functions-publish-project-vscode/function-app-create-resource.png)
+    ![Create a resource in your Azure subscription](media/functions-create-first-java-VSCODE/function-app-create-resource.png)
 
 2.  Provide the following information at the prompts:
 
@@ -129,7 +129,7 @@ In this section, you create a function app and related resources in your Azure s
 
     The extension shows the status of individual resources as they're being created in Azure in the **Azure: Activity Log** panel.
 
-    ![Log of Azure resource creation](../includes/media/functions-publish-project-vscode/resource-activity-log.png)
+    ![Log of Azure resource creation](media/functions-create-first-java-VSCODE/resource-activity-log.png)
 
 3.  When the creation is complete, the following Azure resources are created in your subscription. The resources are named based on your function app name:
 
@@ -159,7 +159,7 @@ Deploying to an existing function app always overwrites the contents of that app
 
 3.  After deployment completes, select **View Output** to view the creation and deployment results, including the Azure resources that you created. If you miss the notification, select the bell icon in the lower right corner to see it again.
 
-    ![Screenshot of the View Output window.](../includes/media/functions-publish-project-vscode/function-create-notifications.png)
+    ![Screenshot of the View Output window.](media/functions-create-first-java-VSCODE/function-create-notifications.png)
 
 
 Run the function in Azure
