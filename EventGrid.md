@@ -1,7 +1,5 @@
-
 Azure Event Grid trigger for Azure Functions
 ============================================
-
 
 In this article
 ---------------
