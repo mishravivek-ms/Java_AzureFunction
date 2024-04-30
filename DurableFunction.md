@@ -7,14 +7,6 @@ Quickstart: Create a Java function in Azure using Visual Studio Code
 In this article
 ---------------
 
-*   [C#](create-first-function-vs-code-csharp)
-*   [Java](create-first-function-vs-code-java)
-*   [JavaScript](create-first-function-vs-code-node)
-*   [PowerShell](create-first-function-vs-code-powershell)
-*   [Python](create-first-function-vs-code-python)
-*   [TypeScript](create-first-function-vs-code-typescript)
-*   [Other (Go/Rust)](create-first-function-vs-code-other)
-
 In this article, you use Visual Studio Code to create a Java function that responds to HTTP requests. After testing the code locally, you deploy it to the serverless environment of Azure Functions.
 
 If Visual Studio Code isn't your preferred development tool, check out our similar tutorials for Java developers:
