@@ -1,199 +1,415 @@
-                                                            Create a Java function using Visual Studio Code - Azure Functions | Microsoft Learn  var msDocs = { data: { timeOrigin: Date.now(), contentLocale: 'en-us', contentDir: 'ltr', userLocale: 'en-us', userDir: 'ltr', pageTemplate: 'Conceptual', brand: 'azure', context: { }, hasBinaryRating: true, hasGithubIssues: true, feedbackHelpLinkType:'', feedbackHelpLinkUrl:'', standardFeedback: false, showFeedbackReport: false, enableTutorialFeedback: false, feedbackSystem: 'GitHub', feedbackGitHubRepo: 'MicrosoftDocs/azure-docs', feedbackProductUrl: 'https://feedback.azure.com/d365community/forum/9df02822-f224-ec11-b6e6-000d3a4f0da0', extendBreadcrumb: false, isEditDisplayable: true, hideViewSource: false, hasPageActions: true, hasPrintButton: true, hasBookmark: true, hasShare: true, isPermissioned: false, isPrivateUnauthorized: false, hasRecommendations: true, contributors: \[ { name: "ggailey777", url: "https://github.com/ggailey777" }, { name: "MadhuraBharadwaj-MSFT", url: "https://github.com/MadhuraBharadwaj-MSFT" }, { name: "ejizba", url: "https://github.com/ejizba" }, { name: "DavidCBerry13", url: "https://github.com/DavidCBerry13" }, { name: "brunoborges", url: "https://github.com/brunoborges" }, { name: "KarlErickson", url: "https://github.com/KarlErickson" }, { name: "diberry", url: "https://github.com/diberry" } \], }, functions:{} };    
-
-Quickstart: Create a Java function in Azure using Visual Studio Code
-====================================================================
-
+Create your first durable function in Java
+==========================================
 
 In this article
 ---------------
 
-In this article, you use Visual Studio Code to create a Java function that responds to HTTP requests. After testing the code locally, you deploy it to the serverless environment of Azure Functions.
+_Durable Functions_ is an extension of that lets you write stateful functions in a serverless environment. The extension manages state, checkpoints, and restarts for you.
 
-If Visual Studio Code isn't your preferred development tool, check out our similar tutorials for Java developers:
+In this quickstart, you'll learn how to create and test a "Hello World" Durable Functions app in Java. The most basic Durable Functions app contains the following three functions:
 
-*   [Gradle](functions-create-first-java-gradle)
-*   [IntelliJ IDEA](/en-us/azure/developer/java/toolkit-for-intellij/quickstart-functions)
-*   [Maven](create-first-function-cli-java)
+*   _Orchestrator function_ - describes a workflow that orchestrates other functions.
+*   _Activity function_ - called by the orchestrator function, performs work, and optionally returns a value.
+*   _Client function_ - a regular Azure Function that starts an orchestrator function. This example uses an HTTP triggered function.
 
-Completing this quickstart incurs a small cost of a few USD cents or less in your Azure account.
+This quickstart will show you how to create this "Hello World" app, which you can do in different ways. Use the selector above to choose your preferred approach.
 
-Configure your environment
---------------------------
+Prerequisites
+-------------
 
-Before you get started, make sure you have the following requirements in place:
+To complete this tutorial, you need:
 
-*   An Azure account with an active subscription. [Create an account for free](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio).
+*   The [Java Developer Kit](/en-us/azure/developer/java/fundamentals/java-support-on-azure), version 8 or newer.
 
-*   The [Java Development Kit](/en-us/azure/developer/java/fundamentals/java-support-on-azure), version 8, 11, 17 or 21(Linux).
+*   [Apache Maven](https://maven.apache.org), version 3.0 or newer.
 
-*   [Apache Maven](https://maven.apache.org), version 3.0 or above.
+*   Latest version of the [Azure Functions Core Tools](../functions-run-local).
 
-*   [Visual Studio Code](https://code.visualstudio.com/) on one of the [supported platforms](https://code.visualstudio.com/docs/supporting/requirements#_platforms).
-
-*   The [Java extension pack](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack)
-
-*   The [Azure Functions extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions) for Visual Studio Code.
+    *   For Azure Functions 4.x, Core Tools **v4.0.4915** or newer is required.
+*   An Azure Storage account, which requires that you have an Azure subscription.
 
 
-Install or update Core Tools
-----------------------------
+If you don't have an [Azure subscription](/en-us/azure/guides/developer/azure-developer-guide#understanding-accounts-subscriptions-and-billing), create an [Azure free account](https://azure.microsoft.com/free/?ref=microsoft.com&utm_source=microsoft.com&utm_medium=docs&utm_campaign=visualstudio) before you begin.
 
-The Azure Functions extension for Visual Studio Code integrates with Azure Functions Core Tools so that you can run and debug your functions locally in Visual Studio Code using the Azure Functions runtime. Before getting started, it's a good idea to install Core Tools locally or update an existing installation to use the latest version.
+Add required dependencies and plugins to your project
+-----------------------------------------------------
 
-In Visual Studio Code, select F1 to open the command palette, and then search for and run the command **Azure Functions: Install or Update Core Tools**.
+Add the following to your `pom.xml`:
 
-This command starts a package-based installation of the latest version of Core Tools.
+    <properties>
+      <azure.functions.maven.plugin.version>1.18.0</azure.functions.maven.plugin.version>
+      <azure.functions.java.library.version>3.0.0</azure.functions.java.library.version>
+      <durabletask.azure.functions>1.0.0</durabletask.azure.functions>
+      <functionAppName>your-unique-app-name</functionAppName>
+    </properties>
+    
+    <dependencies>
+      <dependency>
+        <groupId>com.microsoft.azure.functions</groupId>
+        <artifactId>azure-functions-java-library</artifactId>
+        <version>${azure.functions.java.library.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.microsoft</groupId>
+        <artifactId>durabletask-azure-functions</artifactId>
+        <version>${durabletask.azure.functions}</version>
+      </dependency>
+    </dependencies>
+    
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.1</version>
+        </plugin>
+        <plugin>
+          <groupId>com.microsoft.azure</groupId>
+          <artifactId>azure-functions-maven-plugin</artifactId>
+          <version>${azure.functions.maven.plugin.version}</version>
+          <configuration>
+            <appName>${functionAppName}</appName>
+            <resourceGroup>java-functions-group</resourceGroup>
+            <appServicePlanName>java-functions-app-service-plan</appServicePlanName>
+            <region>westus</region>
+            <runtime>
+              <os>windows</os>
+              <javaVersion>11</javaVersion>
+            </runtime>
+            <appSettings>
+              <property>
+                <name>FUNCTIONS_EXTENSION_VERSION</name>
+                <value>~4</value>
+              </property>
+            </appSettings>
+          </configuration>
+          <executions>
+            <execution>
+              <id>package-functions</id>
+              <goals>
+                <goal>package</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+      </plugins>
+    </build>
+
+
+Add required JSON files
+-----------------------
+
+Add a `host.json` file to your project directory. It should look similar to the following:
+
+    {
+      "version": "2.0",
+      "logging": {
+        "logLevel": {
+          "DurableTask.AzureStorage": "Warning",
+          "DurableTask.Core": "Warning"
+        }
+      },
+      "extensions": {
+        "durableTask": {
+          "hubName": "JavaTestHub"
+        }
+      },
+      "extensionBundle": {
+        "id": "Microsoft.Azure.Functions.ExtensionBundle",
+        "version": "[4.*, 5.0.0)"
+      }
+    }
+
+
+Note
+
+It's important to note that only the Azure Functions v4 extension bundle currently has the necessary support for Durable Functions for Java. Durable Functions for Java is _not_ supported in v3 and early extension bundles. For more information on extension bundles, see the [extension bundles documentation](../functions-bindings-register#extension-bundles).
+
+Durable Functions needs a storage provider to store runtime state. Add a `local.settings.json` file to your project directory to configure the storage provider. To use Azure Storage as the provider, set the value of `AzureWebJobsStorage` to the connection string of your Azure Storage account:
+
+    {
+      "IsEncrypted": false,
+      "Values": {
+        "AzureWebJobsStorage": "<your storage account connection string>",
+        "FUNCTIONS_WORKER_RUNTIME": "java"
+      }
+    }
+
+
+Create your functions
+---------------------
+
+The sample code below shows a simple example of each:
+
+    import com.microsoft.azure.functions.annotation.*;
+    import com.microsoft.azure.functions.*;
+    import java.util.*;
+    
+    import com.microsoft.durabletask.*;
+    import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
+    import com.microsoft.durabletask.azurefunctions.DurableClientContext;
+    import com.microsoft.durabletask.azurefunctions.DurableClientInput;
+    import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
+    
+    public class DurableFunctionsSample {
+        /**
+         * This HTTP-triggered function starts the orchestration.
+         */
+        @FunctionName("StartOrchestration")
+        public HttpResponseMessage startOrchestration(
+                @HttpTrigger(name = "req", methods = {HttpMethod.GET, HttpMethod.POST}, authLevel = AuthorizationLevel.ANONYMOUS) HttpRequestMessage<Optional<String>> request,
+                @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
+                final ExecutionContext context) {
+            context.getLogger().info("Java HTTP trigger processed a request.");
+    
+            DurableTaskClient client = durableContext.getClient();
+            String instanceId = client.scheduleNewOrchestrationInstance("Cities");
+            context.getLogger().info("Created new Java orchestration with instance ID = " + instanceId);
+            return durableContext.createCheckStatusResponse(request, instanceId);
+        }
+    
+        /**
+         * This is the orchestrator function, which can schedule activity functions, create durable timers,
+         * or wait for external events in a way that's completely fault-tolerant.
+         */
+        @FunctionName("Cities")
+        public String citiesOrchestrator(
+                @DurableOrchestrationTrigger(name = "taskOrchestrationContext") TaskOrchestrationContext ctx) {
+            String result = "";
+            result += ctx.callActivity("Capitalize", "Tokyo", String.class).await() + ", ";
+            result += ctx.callActivity("Capitalize", "London", String.class).await() + ", ";
+            result += ctx.callActivity("Capitalize", "Seattle", String.class).await() + ", ";
+            result += ctx.callActivity("Capitalize", "Austin", String.class).await();
+            return result;
+        }
+    
+        /**
+         * This is the activity function that gets invoked by the orchestrator function.
+         */
+        @FunctionName("Capitalize")
+        public String capitalize(@DurableActivityTrigger(name = "name") String name, final ExecutionContext context) {
+            context.getLogger().info("Capitalizing: " + name);
+            return name.toUpperCase();
+        }
+    }
+
+
+
+Create a local project with Maven command
+-----------------------------------------
+
+1.  Run the following command to generate a project with the basic functions of a Durable Functions app:
+
+*   [Bash](#tabpanel_1_bash)
+*   [PowerShell](#tabpanel_1_powershell)
+*   [Cmd](#tabpanel_1_cmd)
+
+    mvn archetype:generate -DarchetypeGroupId=com.microsoft.azure -DarchetypeArtifactId=azure-functions-archetype -DarchetypeVersion=1.51 -Dtrigger=durablefunctions
+
+
+    mvn archetype:generate "-DarchetypeGroupId=com.microsoft.azure" "-DarchetypeArtifactId=azure-functions-archetype" "-DarchetypeVersion=1.51" "-Dtrigger=durablefunctions"
+    
+
+    mvn archetype:generate "-DarchetypeGroupId=com.microsoft.azure" "-DarchetypeArtifactId=azure-functions-archetype" "-DarchetypeVersion=1.51" "-Dtrigger=durablefunctions"
+
+
+2.  Follow the prompts and provide the following information:
+
+Prompt
+
+Value
+
+**groupId**
+
+`com.function`
+
+**artifactId**
+
+`myDurableFunction`
+
+**version**
+
+`1.0-SNAPSHOT`
+
+**package**
+
+`com.function`
+
+**Y**
+
+Hit _enter_ to confirm
+
+Now you have a local project generated with the three functions that are needed for a basic Durable Functions app.
+
+Please check to ensure you have `com.microsoft:durabletask-azure-functions` as a dependency in your `pom.xml`.
+
+Configure backend storage provider
+----------------------------------
+
+Durable Functions needs a storage provider to store runtime state. You can configure to use Azure Storage as the storage provider in `local.settings.json` by providing the connection string of your Azure Storage account as the value to `AzureWebJobsStorage`:
+
+    {
+      "IsEncrypted": false,
+      "Values": {
+        "AzureWebJobsStorage": "<your storage account connection string>",
+        "FUNCTIONS_WORKER_RUNTIME": "java"
+      }
+    }
+
 
 Create your local project
 -------------------------
 
-In this section, you use Visual Studio Code to create a local Azure Functions project in Java. Later in this article, you'll publish your function code to Azure.
+1.  In Visual Studio Code, press F1 (or Ctrl/Cmd+Shift+P) to open the command palette. In the command palette, search for and select `Azure Functions: Create New Project...`.
 
-1.  Choose the Azure icon in the Activity bar. Then in the **Workspace (local)** area, select the **+** button, choose **Create Function** in the dropdown. When prompted, choose **Create new project**.
+    ![Screenshot of create new functions project.](media/quickstart-js-vscode/functions-create-project.png)
 
-    ![Screenshot of create a new project window.](media/functions-create-first-function-vs-code/create-new-project.png)
+2.  Choose an empty folder location for your project and choose **Select**.
 
-2.  Choose the directory location for your project workspace and choose **Select**. You should either create a new folder or choose an empty folder for the project workspace. Don't choose a project folder that is already part of a workspace.
-
-
-Run the function locally
-------------------------
-
-Visual Studio Code integrates with [Azure Functions Core tools](functions-run-local) to let you run this project on your local development computer before you publish to Azure.
-
-1.  To start the function locally, press F5 or the **Run and Debug** icon in the left-hand side Activity bar. The **Terminal** panel displays the Output from Core Tools. Your app starts in the **Terminal** panel. You can see the URL endpoint of your HTTP-triggered function running locally.
-
-    ![Screenshot of the Local function VS Code output.](media/functions-create-first-java-VSCODE/functions-vscode-f5.png)
-
-    If you have trouble running on Windows, make sure that the default terminal for Visual Studio Code isn't set to **WSL Bash**.
-
-2.  With Core Tools still running in **Terminal**, choose the Azure icon in the activity bar. In the **Workspace** area, expand **Local Project** > **Functions**. Right-click (Windows) or Ctrl - click (macOS) the new function and choose **Execute Function Now...**.
-
-    ![Execute function now from Visual Studio Code](media/functions-create-first-java-VSCODE/execute-function-now.png)
-
-3.  In **Enter request body** you see the request message body value of `{ "name": "Azure" }`. Press Enter to send this request message to your function.
-
-4.  When the function executes locally and returns a response, a notification is raised in Visual Studio Code. Information about the function execution is shown in **Terminal** panel.
-
-5.  With the **Terminal** panel focused, press Ctrl + C to stop Core Tools and disconnect the debugger.
-
-
-After you've verified that the function runs correctly on your local computer, it's time to use Visual Studio Code to publish the project directly to Azure.
-
-Sign in to Azure
-----------------
-
-Before you can create Azure resources or publish your app, you must sign in to Azure.
-
-1.  If you aren't already signed in, choose the Azure icon in the Activity bar. Then in the **Resources** area, choose **Sign in to Azure...**.
-
-    ![Screenshot of the sign-in to Azure window within VS Code.](../includes/media/functions-sign-in-vs-code/functions-sign-into-azure.png)
-
-    If you're already signed in and can see your existing subscriptions, go to the next section. If you don't yet have an Azure account, choose **Create an Azure Account...**. Students can choose **Create an Azure for Students Account...**.
-
-2.  When prompted in the browser, choose your Azure account and sign in using your Azure account credentials. If you create a new account, you can sign in after your account is created.
-
-3.  After you've successfully signed in, you can close the new browser window. The subscriptions that belong to your Azure account are displayed in the sidebar.
-
-
-Create the function app in Azure
---------------------------------
-
-In this section, you create a function app and related resources in your Azure subscription.
-
-1.  Choose the Azure icon in the Activity bar. Then in the **Resources** area, select the **+** icon and choose the **Create Function App in Azure** option.
-
-    ![Create a resource in your Azure subscription](media/functions-create-first-java-VSCODE/function-app-create-resource.png)
-
-2.  Provide the following information at the prompts:
+3.  Follow the prompts and provide the following information:
 
     Prompt
 
-    Selection
+    Value
 
-    **Select subscription**
+    **Select a language**
 
-    Choose the subscription to use. You won't see this prompt when you have only one subscription visible under **Resources**.
+    Choose `Java`.
 
-    **Enter a globally unique name for the function app**
+    **Select a version of Java**
 
-    Type a name that is valid in a URL path. The name you type is validated to make sure that it's unique in Azure Functions.
+    Choose `Java 8` or newer, the Java version on which your functions run in Azure. Choose a Java version that you've verified locally.
 
-    **Select a runtime stack**
+    **Provide a group ID**
 
-    Choose the language version on which you've been running locally.
+    `com.function`.
 
-    **Select a location for new resources**
+    **Provide an artifact ID**
 
-    For better performance, choose a [region](https://azure.microsoft.com/regions/) near you.
+    `myDurableFunction`.
 
-    The extension shows the status of individual resources as they're being created in Azure in the **Azure: Activity Log** panel.
+    **Provide a version**
 
-    ![Log of Azure resource creation](media/functions-create-first-java-VSCODE/resource-activity-log.png)
+    `1.0-SNAPSHOT`.
 
-3.  When the creation is complete, the following Azure resources are created in your subscription. The resources are named based on your function app name:
+    **Provide a package name**
 
-    *   A [resource group](../azure-resource-manager/management/overview), which is a logical container for related resources.
-    *   A standard [Azure Storage account](../storage/common/storage-account-create), which maintains state and other information about your projects.
-    *   A function app, which provides the environment for executing your function code. A function app lets you group functions as a logical unit for easier management, deployment, and sharing of resources within the same hosting plan.
-    *   An App Service plan, which defines the underlying host for your function app.
-    *   An Application Insights instance connected to the function app, which tracks usage of your functions in the app.
+    `com.function`.
 
-    A notification is displayed after your function app is created and the deployment package is applied.
+    **Provide an app name**
 
-    Tip
+    `myDurableFunction`.
 
-    By default, the Azure resources required by your function app are created based on the function app name you provide. By default, they're also created in the same new resource group with the function app. If you want to either customize the names of these resources or reuse existing resources, you need to [publish the project with advanced create options](functions-develop-vs-code#enable-publishing-with-advanced-create-options) instead.
+    **Select the build tool for Java project**
 
+    Choose `Maven`.
 
-Deploy the project to Azure
----------------------------
+    **Select how you would like to open your project**
 
-Important
-
-Deploying to an existing function app always overwrites the contents of that app in Azure.
-
-1.  In the **Resources** area of the Azure activity, locate the function app resource you just created, right-click the resource, and select **Deploy to function app...**.
-
-2.  When prompted about overwriting previous deployments, select **Deploy** to deploy your function code to the new function app resource.
-
-3.  After deployment completes, select **View Output** to view the creation and deployment results, including the Azure resources that you created. If you miss the notification, select the bell icon in the lower right corner to see it again.
-
-    ![Screenshot of the View Output window.](media/functions-create-first-java-VSCODE/function-create-notifications.png)
+    Choose `Open in new window`.
 
 
-Run the function in Azure
+You now have a project with an example HTTP function. You can remove this function if you'd like because we'll be adding the basic functions of a Durable Functions app in the next step.
+
+Add functions to the project
+----------------------------
+
+1.  In the command palette, search for and select `Azure Functions: Create Function...`.
+
+2.  Select `Change template filter` to `All`.
+
+3.  Follow the prompts and provide the following information:
+
+    Prompt
+
+    Value
+
+    **Select a template for your function**
+
+    DurableFunctionsOrchestration
+
+    **Provide a package name**
+
+    `com.function`
+
+    **Provide a function name**
+
+    `DurableFunctionsOrchestrator`
+
+4.  Choose `Select storage account` on the pop-up window asking to set up storage account information and follow the prompts.
+
+
+You should now have the three basic functions for a Durable Functions app generated.
+
+Configure pom.xml and host.json
+-------------------------------
+
+Add the following dependency to your `pom.xml`:
+
+    <dependency>
+      <groupId>com.microsoft</groupId>
+      <artifactId>durabletask-azure-functions</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
+
+Add the `extensions` property to your `host.json`:
+
+    "extensions": { "durableTask": { "hubName": "JavaTestHub" }}
+
+
+Test the function locally
 -------------------------
 
-1.  Back in the **Resources** area in the side bar, expand your subscription, your new function app, and **Functions**. Right-click (Windows) or Ctrl - click (macOS) the `HttpExample` function and choose **Execute Function Now...**.
+Azure Functions Core Tools lets you run an Azure Functions project on your local development computer.
 
-    ![Screenshot of executing function in Azure from Visual Studio Code.](../includes/media/functions-vs-code-run-remote/execute-function-now.png)
+Note
 
-2.  In **Enter request body** you see the request message body value of `{ "name": "Azure" }`. Press Enter to send this request message to your function.
+Durable Functions for Java requires Azure Functions Core Tools v4.0.4915 or newer. You can see which version is installed by running the `func --version` command from the terminal.
 
-3.  When the function executes in Azure and returns a response, a notification is raised in Visual Studio Code.
+1.  If you are using Visual Studio Code, open a new terminal window and run the following commands to build the project:
 
-
-Clean up resources
-------------------
-
-When you continue to the [next step](#next-steps) and add an Azure Storage queue binding to your function, you'll need to keep all your resources in place to build on what you've already done.
-
-Otherwise, you can use the following steps to delete the function app and its related resources to avoid incurring any further costs.
-
-1.  In Visual Studio Code, press F1 to open the command palette. In the command palette, search for and select `Azure: Open in portal`.
-
-2.  Choose your function app and press Enter. The function app page opens in the Azure portal.
-
-3.  In the **Overview** tab, select the named link next to **Resource group**.
-
-    ![Screenshot of select the resource group to delete from the function app page.](../includes/media/functions-cleanup-resources-vs-code/functions-app-delete-resource-group.png)
-
-4.  On the **Resource group** page, review the list of included resources, and verify that they're the ones you want to delete.
-
-5.  Select **Delete resource group**, and follow the instructions.
-
-    Deletion may take a couple of minutes. When it's done, a notification appears for a few seconds. You can also select the bell icon at the top of the page to view the notification.
+        mvn clean package
 
 
-For more information about Functions costs, see [Estimating Consumption plan costs](functions-consumption-costs).
+    Then run the durable function:
+    
+        mvn azure-functions:run
+
+
+2.  In the Terminal panel, copy the URL endpoint of your HTTP-triggered function.
+
+    ![Screenshot of Azure local output.](media/quickstart-java/maven-functions-run.png)
+
+3.  Using a tool like [Postman](https://www.getpostman.com/) or [cURL](https://curl.haxx.se/), send an HTTP POST request to the URL endpoint. You should get a response similar to the following:
+
+        {
+            "id": "d1b33a60-333f-4d6e-9ade-17a7020562a9",
+            "purgeHistoryDeleteUri": "http://localhost:7071/runtime/webhooks/durabletask/
+            "sendEventPostUri": "http://localhost:7071/runtime/webhooks/durabletask/
+            "statusQueryGetUri": "http://localhost:7071/runtime/webhooks/durabletask,
+            "terminatePostUri": "http://localhost:7071/runtime/webhooks/durabletask/
+        }
+
+
+    The response is the initial result from the HTTP function letting you know the durable orchestration has started successfully. It is not yet the end result of the orchestration. The response includes a few useful URLs. For now, let's query the status of the orchestration.
+
+4.  Copy the URL value for `statusQueryGetUri` and paste it in the browser's address bar and execute the request. Alternatively you can also continue to use Postman or cURL to issue the GET request.
+
+    The request will query the orchestration instance for the status. You should get an eventual response, which shows us the instance has completed, and includes the outputs or results of the durable function. It looks like:
+
+        {
+            "name": "Cities",
+            "instanceId": "sdfsdf",
+            "runtimeStatus": "Completed",
+            "input": null,
+            "customStatus": "",
+            "output":"TOKYO, LONDON, SEATTLE, AUSTIN",
+            "createdTime": "2022-12-12T05:00:02Z",
+            "lastUpdatedTime": "2022-12-12T05:00:06Z"
+        }
+
