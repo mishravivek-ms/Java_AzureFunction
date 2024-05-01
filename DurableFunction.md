@@ -266,7 +266,7 @@ Create your local project
 
 1.  In Visual Studio Code, press F1 (or Ctrl/Cmd+Shift+P) to open the command palette. In the command palette, search for and select `Azure Functions: Create New Project...`.
 
-    ![Screenshot of create new functions project.](media/functions-create-first-java-VSCOD/functions-create-project.png)
+    ![Screenshot of create new functions project.](media/functions-create-first-java-VSCODE/functions-create-project.png)
 
 2.  Choose an empty folder location for your project and choose **Select**.
 
@@ -383,7 +383,7 @@ Durable Functions for Java requires Azure Functions Core Tools v4.0.4915 or newe
 
 2.  In the Terminal panel, copy the URL endpoint of your HTTP-triggered function.
 
-    ![Screenshot of Azure local output.](media/functions-create-first-java-VSCOD/maven-functions-run.png)
+    ![Screenshot of Azure local output.](media/functions-create-first-java-VSCODE/maven-functions-run.png)
 
 3.  Using a tool like [Postman](https://www.getpostman.com/) or [cURL](https://curl.haxx.se/), send an HTTP POST request to the URL endpoint. You should get a response similar to the following:
 
